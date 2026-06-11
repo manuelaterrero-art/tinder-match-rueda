@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tinder Match Rueda</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+<h1>🎡 Tinder Match Rueda</h1>
+<p>Rueda Gigante • 30 de Agosto 2026</p>
+<div id="countdown"></div>
+</header>
+
+<section class="card">
+<form id="participantForm">
+<input id="nombre" placeholder="Nombre completo" required>
+<input id="whatsapp" placeholder="WhatsApp" required>
+
+<select id="rol" required>
+<option value="">Rol</option>
+<option>Guía</option>
+<option>Seguidor(a)</option>
+</select>
+
+<select id="nivel" required>
+<option value="">Nivel</option>
+<option>Roja</option>
+<option>Azul</option>
+<option>Blanca</option>
+</select>
+
+<label><input type="checkbox" id="flexible"> Estoy dispuesto(a) a bailar con otro nivel</label>
+
+<h3>Disponibilidad</h3>
+<div class="days">
+<label><input type="checkbox" value="Mie10"> Mié 10</label>
+<label><input type="checkbox" value="Jue11"> Jue 11</label>
+<label><input type="checkbox" value="Vie12"> Vie 12</label>
+<label><input type="checkbox" value="Sab13"> Sáb 13</label>
+<label><input type="checkbox" value="Mie17"> Mié 17</label>
+<label><input type="checkbox" value="Jue18"> Jue 18</label>
+<label><input type="checkbox" value="Vie19"> Vie 19</label>
+<label><input type="checkbox" value="Sab20"> Sáb 20</label>
+<label><input type="checkbox" value="Mie24"> Mié 24</label>
+<label><input type="checkbox" value="Jue25"> Jue 25</label>
+<label><input type="checkbox" value="Vie26"> Vie 26</label>
+<label><input type="checkbox" value="Sab27"> Sáb 27</label>
+</div>
+
+<label><input type="checkbox" required> Acepto compartir mi WhatsApp con otros participantes.</label>
+
+<button type="submit">Buscar Match</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Participantes</h2>
+<div id="participants"></div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
