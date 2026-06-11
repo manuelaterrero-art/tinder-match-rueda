@@ -70,7 +70,6 @@ participantsBox.innerHTML = "";
 
 snapshot.forEach(doc => {
 
-```
 const p = doc.data();
 
 participantsBox.innerHTML += `
@@ -82,7 +81,6 @@ participantsBox.innerHTML += `
     </a>
   </div>
 `;
-```
 
 });
 }
@@ -97,7 +95,6 @@ let matches = [];
 
 snapshot.forEach(doc => {
 
-```
 const candidato = doc.data();
 
 const score =
@@ -109,7 +106,6 @@ if (score > 0) {
     score
   });
 }
-```
 
 });
 
@@ -124,7 +120,6 @@ let html = `     <section class="card" id="matches">       <h2>❤️ Mejores Ma
 
 matches.slice(0, 5).forEach(m => {
 
-```
 html += `
   <div class="person">
     <strong>${m.nombre}</strong><br>
@@ -135,7 +130,6 @@ html += `
     </a>
   </div>
 `;
-```
 
 });
 
