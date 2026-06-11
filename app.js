@@ -1,22 +1,43 @@
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbz3VxiIyRtlnQds5dBbUvr2FR9gvM_YZYh99BHv_1e5jpv-f8d234_gZttZHGri2udY4w/exec";
+"https://script.google.com/macros/s/AKfycbxui7VZfvZqj92n-qSw6AAvJggJXplyQSCSIqamMXAbRQHa8D8LQ60UBpM-mz5tutpIJw/exec";
 
 const form = document.getElementById("participantForm");
 const box = document.getElementById("participants");
 
+function countdown() {
+    const target = new Date("2026-08-30T00:00:00");
+    const diff = target - new Date();
+    const days = Math.floor(diff / 86400000);
+
+    const countdownElement = document.getElementById("countdown");
+
+    if (countdownElement) {
+        countdownElement.innerText =
+            `Faltan ${days} días para la Rueda Gigante`;
+    }
+}
+
 function calcularCompatibilidad(usuario, candidato) {
 
-    if (usuario.rol === candidato.rol) return 0;
+    if (usuario.rol === candidato.rol) {
+        return 0;
+    }
 
     let puntos = 0;
 
     if (usuario.nivel === candidato.nivel) {
         puntos += 50;
     } else {
-        const flexible1 = usuario.flexible === true || usuario.flexible === "true";
-        const flexible2 = candidato.flexible === true || candidato.flexible === "true";
 
-        if (flexible1 && flexible2) {
+        const flexibleUsuario =
+            usuario.flexible === true ||
+            usuario.flexible === "true";
+
+        const flexibleCandidato =
+            candidato.flexible === true ||
+            candidato.flexible === "true";
+
+        if (flexibleUsuario && flexibleCandidato) {
             puntos += 20;
         } else {
             return 0;
@@ -24,9 +45,12 @@ function calcularCompatibilidad(usuario, candidato) {
     }
 
     const diasUsuario = usuario.disponibilidad || [];
+
     const diasCandidato = Array.isArray(candidato.disponibilidad)
         ? candidato.disponibilidad
-        : String(candidato.disponibilidad).split(",");
+        : String(candidato.disponibilidad || "")
+            .split(",")
+            .map(x => x.trim());
 
     diasUsuario.forEach(dia => {
         if (diasCandidato.includes(dia)) {
@@ -42,6 +66,7 @@ async function cargarParticipantes() {
     try {
 
         const response = await fetch(SCRIPT_URL);
+
         const participantes = await response.json();
 
         box.innerHTML = "";
@@ -52,7 +77,7 @@ async function cargarParticipantes() {
             <div class="person">
                 <strong>${p.nombre}</strong><br>
                 ${p.rol} • ${p.nivel}<br>
-                📱 <a href="https://wa.me/${p.whatsapp.replace(/\\D/g,'')}" target="_blank">
+                📱 <a href="https://wa.me/${String(p.whatsapp).replace(/\\D/g,'')}" target="_blank">
                     ${p.whatsapp}
                 </a>
             </div>
@@ -60,21 +85,89 @@ async function cargarParticipantes() {
         });
 
     } catch (error) {
+
+        console.error(error);
+
+        box.innerHTML = `
+        <div class="person">
+            Error cargando participantes.
+        </div>
+        `;
+    }
+}
+
+async function mostrarMatches(usuario) {
+
+    try {
+
+        const response = await fetch(SCRIPT_URL);
+
+        const participantes = await response.json();
+
+        const matches = participantes
+            .map(p => ({
+                ...p,
+                score: calcularCompatibilidad(usuario, p)
+            }))
+            .filter(p => p.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
+
+        let html = `
+        <div class="card" id="matches">
+            <h2>❤️ Mejores Matches</h2>
+        `;
+
+        if (matches.length === 0) {
+
+            html += `
+            <p>No encontramos coincidencias todavía.</p>
+            `;
+
+        } else {
+
+            matches.forEach(m => {
+
+                html += `
+                <div class="person">
+                    <strong>${m.nombre}</strong><br>
+                    ${m.rol} • ${m.nivel}<br>
+                    ❤️ Compatibilidad: ${m.score}%<br>
+                    📱 <a href="https://wa.me/${String(m.whatsapp).replace(/\\D/g,'')}" target="_blank">
+                        ${m.whatsapp}
+                    </a>
+                </div>
+                `;
+            });
+        }
+
+        html += `</div>`;
+
+        const anterior = document.getElementById("matches");
+
+        if (anterior) {
+            anterior.remove();
+        }
+
+        document.body.insertAdjacentHTML("beforeend", html);
+
+    } catch (error) {
+
         console.error(error);
     }
 }
 
-form.addEventListener("submit", async function(e) {
+form.addEventListener("submit", async function (e) {
 
     e.preventDefault();
 
     const disponibilidad = [];
 
-    document.querySelectorAll(".days input:checked").forEach(d => {
-        disponibilidad.push(d.value);
-    });
+    document.querySelectorAll(".days input:checked")
+        .forEach(d => disponibilidad.push(d.value));
 
     const participante = {
+
         nombre: document.getElementById("nombre").value,
         whatsapp: document.getElementById("whatsapp").value,
         rol: document.getElementById("rol").value,
@@ -90,96 +183,30 @@ form.addEventListener("submit", async function(e) {
             body: JSON.stringify(participante)
         });
 
-        await response.json();
+        const resultado = await response.json();
 
-        alert("¡Registro enviado correctamente!");
+        if (resultado.success) {
 
-        form.reset();
+            alert("Registro enviado correctamente");
 
-        cargarParticipantes();
+            form.reset();
 
-        mostrarMatches(participante);
+            await cargarParticipantes();
+
+            await mostrarMatches(participante);
+
+        } else {
+
+            alert("Error guardando datos");
+        }
 
     } catch (error) {
 
         console.error(error);
-        alert("Error enviando datos.");
 
+        alert("Error enviando datos");
     }
-
 });
-
-async function mostrarMatches(usuario) {
-
-    const response = await fetch(SCRIPT_URL);
-    const participantes = await response.json();
-
-    let matches = participantes
-        .map(p => ({
-            ...p,
-            score: calcularCompatibilidad(usuario, p)
-        }))
-        .filter(p => p.score > 0)
-        .sort((a,b) => b.score - a.score)
-        .slice(0,5);
-
-    let html = `
-    <div class="card">
-        <h2>❤️ Mejores Matches</h2>
-    `;
-
-    if(matches.length === 0){
-
-        html += `
-        <p>Aún no encontramos coincidencias.</p>
-        `;
-
-    } else {
-
-        matches.forEach(m => {
-
-            html += `
-            <div class="person">
-                <strong>${m.nombre}</strong><br>
-                ${m.rol} • ${m.nivel}<br>
-                Compatibilidad: ${m.score}%<br>
-                📱 <a href="https://wa.me/${m.whatsapp.replace(/\\D/g,'')}" target="_blank">
-                    ${m.whatsapp}
-                </a>
-            </div>
-            `;
-
-        });
-
-    }
-
-    html += "</div>";
-
-    const oldMatches = document.getElementById("matches");
-
-    if(oldMatches){
-        oldMatches.remove();
-    }
-
-    const div = document.createElement("div");
-    div.id = "matches";
-    div.innerHTML = html;
-
-    document.body.appendChild(div);
-}
-
-function countdown() {
-
-    const target = new Date("2026-08-30T00:00:00");
-
-    const diff = target - new Date();
-
-    const days = Math.floor(diff / 86400000);
-
-    document.getElementById("countdown").innerText =
-        `Faltan ${days} días para la Rueda Gigante`;
-
-}
 
 countdown();
 cargarParticipantes();
