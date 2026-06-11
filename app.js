@@ -1,12 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-
 import {
 getFirestore,
 collection,
 addDoc,
-getDocs,
-query,
-orderBy
+getDocs
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -25,18 +22,13 @@ const form = document.getElementById("participantForm");
 const participantsBox = document.getElementById("participants");
 
 function countdown() {
-
 const target = new Date("2026-08-30T00:00:00");
-
 const diff = target - new Date();
-
 const days = Math.floor(diff / 86400000);
 
 document.getElementById("countdown").innerText =
 `Faltan ${days} días para la Rueda Gigante`;
 }
-
-countdown();
 
 function calcularCompatibilidad(usuario, candidato) {
 
@@ -45,31 +37,22 @@ if (usuario.rol === candidato.rol) return 0;
 let puntos = 0;
 
 if (usuario.nivel === candidato.nivel) {
-
-```
 puntos += 50;
-```
-
 } else {
-
-```
 if (usuario.flexible && candidato.flexible) {
-  puntos += 20;
+puntos += 20;
 } else {
-  return 0;
+return 0;
 }
-```
-
 }
 
 usuario.disponibilidad.forEach(dia => {
-
-```
-if (candidato.disponibilidad.includes(dia)) {
-  puntos += 10;
+if (
+Array.isArray(candidato.disponibilidad) &&
+candidato.disponibilidad.includes(dia)
+) {
+puntos += 10;
 }
-```
-
 });
 
 return Math.min(puntos, 100);
@@ -79,11 +62,9 @@ async function cargarParticipantes() {
 
 participantsBox.innerHTML = "Cargando...";
 
-const participantesRef = collection(db, "participantes");
-
-const q = query(participantesRef);
-
-const snapshot = await getDocs(q);
+const snapshot = await getDocs(
+collection(db, "participantes")
+);
 
 participantsBox.innerHTML = "";
 
@@ -108,9 +89,9 @@ participantsBox.innerHTML += `
 
 async function mostrarMatches(usuario) {
 
-const participantesRef = collection(db, "participantes");
-
-const snapshot = await getDocs(participantesRef);
+const snapshot = await getDocs(
+collection(db, "participantes")
+);
 
 let matches = [];
 
@@ -123,31 +104,25 @@ const score =
   calcularCompatibilidad(usuario, candidato);
 
 if (score > 0) {
-
   matches.push({
     ...candidato,
     score
   });
-
 }
 ```
 
 });
 
-matches.sort((a,b)=>b.score-a.score);
+matches.sort((a, b) => b.score - a.score);
 
-const anteriores =
-document.getElementById("matches");
+const anterior = document.getElementById("matches");
 
-if(anteriores) anteriores.remove();
+if (anterior) anterior.remove();
 
-let html = `
-
-  <section class="card" id="matches">
-  <h2>❤️ Mejores Matches</h2>
+let html = `     <section class="card" id="matches">       <h2>❤️ Mejores Matches</h2>
   `;
 
-matches.slice(0,5).forEach(m=>{
+matches.slice(0, 5).forEach(m => {
 
 ```
 html += `
@@ -172,7 +147,7 @@ html
 );
 }
 
-form.addEventListener("submit", async e => {
+form.addEventListener("submit", async (e) => {
 
 e.preventDefault();
 
@@ -183,29 +158,13 @@ document
 .forEach(c => disponibilidad.push(c.value));
 
 const participante = {
-
-```
-nombre:
-  document.getElementById("nombre").value,
-
-whatsapp:
-  document.getElementById("whatsapp").value,
-
-rol:
-  document.getElementById("rol").value,
-
-nivel:
-  document.getElementById("nivel").value,
-
-flexible:
-  document.getElementById("flexible").checked,
-
-disponibilidad,
-
-fecha:
-  Date.now()
-```
-
+nombre: document.getElementById("nombre").value,
+whatsapp: document.getElementById("whatsapp").value,
+rol: document.getElementById("rol").value,
+nivel: document.getElementById("nivel").value,
+flexible: document.getElementById("flexible").checked,
+disponibilidad: disponibilidad,
+fecha: Date.now()
 };
 
 await addDoc(
@@ -223,4 +182,5 @@ await mostrarMatches(participante);
 
 });
 
+countdown();
 cargarParticipantes();
